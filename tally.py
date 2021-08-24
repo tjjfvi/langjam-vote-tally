@@ -8,8 +8,8 @@ users = {}
 for teamName in os.listdir(jamdir):
     if not os.path.exists(f"{jamdir}/{teamName}/TEAM"): continue
 
+    team = {"name": teamName, "users": [], "tally": 0}
     teamName = teamName.lower()
-    team = []
     teams[teamName] = team
     with open(f"{jamdir}/{teamName}/TEAM") as f:
         for line in f:
@@ -18,9 +18,8 @@ for teamName in os.listdir(jamdir):
                 if name.startswith("[delete this line"): continue
                 if name == "": continue
                 users[name] = teamName
-                team.append(name)
+                team["users"].append(name)
 
-tallies = []
 with open(votesfile) as f:
     for line in f:
         issueName, count, voters = line[:-1].split(";")
@@ -29,21 +28,17 @@ with open(votesfile) as f:
         if voters == "": continue
 
         teamName = issueName.replace("Team: ", "")
-        rawTeamName = teamName
         teamName = teamName.lower()
         voters = map(lambda x: x.strip().lower(), voters.split(":"))
 
-        tally = 0
+        team = teams[teamName]
         for voter in voters:
             if voter not in users:
-                print("Vote from non-participant:", voter, "voted for", rawTeamName)
+                print("Vote from non-participant:", voter, "voted for", team["name"])
             elif users[voter] == teamName:
-                print("Self-vote:", voter, "voted for their own team", rawTeamName)
+                print("Self-vote:", voter, "voted for their own team", team["name"])
             else:
-                tally += 1
+                team['tally'] += 1
 
-        tallies.append((rawTeamName, tally))
-
-tallies.sort(key=lambda x: x[1])
-for tally in tallies:
-    print(tally[0] + ": " + str(tally[1]))
+for team in sorted(teams.values(), key=lambda team: team["tally"]):
+    print(f"{team['name']}: {team['tally']}")
