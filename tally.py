@@ -5,13 +5,13 @@ votesfile = "rawvotes.txt"
 
 teams = {}
 users = {}
-for teamName in os.listdir(jamdir):
-    if not os.path.exists(f"{jamdir}/{teamName}/TEAM"): continue
+for realTeamName in os.listdir(jamdir):
+    if not os.path.exists(f"{jamdir}/{realTeamName}/TEAM"): continue
 
+    teamName = realTeamName.lower()
     team = {"name": teamName, "users": [], "tally": 0}
-    teamName = teamName.lower()
     teams[teamName] = team
-    with open(f"{jamdir}/{teamName}/TEAM") as f:
+    with open(f"{jamdir}/{realTeamName}/TEAM") as f:
         for line in f:
             for name in line.split():
                 name = name.strip().lower()
