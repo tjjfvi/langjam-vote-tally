@@ -15,6 +15,7 @@ for realTeamName in os.listdir(jamdir):
         for line in f:
             for name in line.split():
                 name = name.strip().lower()
+                if name[0] == "@": name = name[1:]
                 if name.startswith("[delete this line"): continue
                 if name == "": continue
                 users[name] = teamName
