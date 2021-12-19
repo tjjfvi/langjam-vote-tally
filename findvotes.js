@@ -2,7 +2,7 @@ let https = require("https");
 let fs = require("fs");
 
 let authorization = "Basic <insert your own base64-encoded username:token>";
-let repo = "langjam/jam0001";
+let repo = "langjam/jam0002";
 let outfile = "rawvotes.txt";
 
 function get(url, accept) {
@@ -14,7 +14,7 @@ function get(url, accept) {
 		};
 
 		process.stderr.write(Buffer.from("==> GET " + url + "... ", "utf-8"));
-		let req = https.get(url, {headers}, res => {
+		let req = https.get(url, { headers }, res => {
 			let data = "";
 			res.on("data", d => {
 				data += d;
@@ -42,7 +42,7 @@ async function main(repo, stream) {
 	let votes = [];
 	for (let pageNum = 1; ; ++pageNum) {
 		let page = JSON.parse(await get(
-			`https://api.github.com/repos/${repo}/issues?state=open&page=${pageNum}`,
+			`https://api.github.com/repos/${repo}/pulls?state=closed&page=${pageNum}`,
 			"application/vnd.github.v3+json"));
 		if (page.length == 0) {
 			break;
@@ -67,7 +67,7 @@ async function main(repo, stream) {
 				}
 			}
 
-			stream.write(issue.title.trim() + ";" + count + ";" + people.join(":") + "\n");
+			stream.write(issue.number + ";" + count + ";" + people.join(":") + "\n");
 		}
 	}
 }

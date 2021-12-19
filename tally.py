@@ -1,6 +1,7 @@
 import os
+import re
 
-jamdir = "jam0001"
+jamdir = "../jam0002"
 votesfile = "rawvotes.txt"
 
 teams = {}
@@ -8,35 +9,40 @@ users = {}
 for realTeamName in os.listdir(jamdir):
     if not os.path.exists(f"{jamdir}/{realTeamName}/TEAM"): continue
 
-    teamName = realTeamName.lower()
-    team = {"name": teamName, "users": [], "tally": 0}
-    teams[teamName] = team
+    teamId = ""
+    regex = r".*/pull/(\d+)"
+    with open(f"{jamdir}/{realTeamName}/README.md" if os.path.exists(f"{jamdir}/{realTeamName}/README.md") else f"{jamdir}/{realTeamName}/readme.md") as f:
+        for line in f:
+            teamId = re.match(regex, line).groups()[0]
+            break
+
+    team = {"id": teamId, "name": realTeamName, "users": [], "tally": 0}
+    teams[teamId] = team
     with open(f"{jamdir}/{realTeamName}/TEAM") as f:
         for line in f:
             for name in line.split():
                 name = name.strip().lower()
                 if name[0] == "@": name = name[1:]
+                if name.startswith("https://github.com/") == "@": name = name[len("https://github.com/"):]
                 if name.startswith("[delete this line"): continue
                 if name == "": continue
-                users[name] = teamName
+                users[name] = teamId
                 team["users"].append(name)
 
 with open(votesfile) as f:
     for line in f:
-        issueName, count, voters = line[:-1].split(";")
-        if not issueName.startswith("Team: "): continue
+        pullId, count, voters = line[:-1].split(";")
         voters = voters.strip()
         if voters == "": continue
 
-        teamName = issueName.replace("Team: ", "")
-        teamName = teamName.lower()
         voters = map(lambda x: x.strip().lower(), voters.split(":"))
 
-        team = teams[teamName]
+        if not pullId in teams: continue
+        team = teams[pullId]
         for voter in voters:
             if voter not in users:
                 print("Vote from non-participant:", voter, "voted for", team["name"])
-            elif users[voter] == teamName:
+            elif users[voter] == pullId:
                 print("Self-vote:", voter, "voted for their own team", team["name"])
             else:
                 team['tally'] += 1
